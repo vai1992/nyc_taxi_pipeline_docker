@@ -1,0 +1,99 @@
+{% if run_type == "monthly" %}
+    {% set file_name = 'data/monthly/yellow_tripdata_' ~ year ~ '-' ~ month %}
+    {% set partition_key = year ~ '-' ~ month %}
+    {% set date_format = '%Y-%m' %}
+{% elif run_type == "daily" %}
+    {% set file_name = 'data/daily/yellow_tripdata_' ~ year ~ '-' ~ month ~ '-' ~ day %}
+    {% set partition_key = year ~ '-' ~ month ~ '-' ~ day %}
+     {% set date_format = '%Y-%m-%d' %}
+{% elif run_type == "hourly" %}
+    {% set file_name = 'data/hourly/yellow_tripdata_' ~ year ~ '-' ~ month ~ '-' ~ day ~ '-' ~ hour %}
+    {% set partition_key = year ~ '-' ~ month ~ '-' ~ day ~ '-' ~ hour %}
+     {% set date_format = '%Y-%m-%d-%H' %}
+{% else %}
+    {% set file_name = 'data/monthly/yellow_tripdata_' ~ year ~ '-' ~ month %}
+    {% set partition_key = year ~ '-' ~ month %}
+    {% set date_format = '%Y-%m' %}
+{% endif %}
+
+
+
+DELETE FROM nyc.trips
+WHERE strftime(pickup_datetime, '{{date_format}}') = '{{partition_key}}';
+
+
+INSERT INTO nyc.trips
+SELECT
+      vendorId
+     ,tpep_pickup_datetime
+     ,tpep_dropoff_datetime
+     ,passenger_count
+     ,trip_distance
+     ,rateCodeID as rate_code_id
+     ,pu_lookup.zone
+     ,do_lookup.zone
+     ,store_and_fwd_flag
+     ,payment_type
+     ,fare_amount
+     ,extra
+     ,mta_tax
+     ,tip_amount
+     ,tolls_amount
+     ,improvement_surcharge
+     ,total_amount
+     ,congestion_surcharge
+     ,airport_fee
+     ,date_diff('minute', tpep_pickup_datetime, tpep_dropoff_datetime)
+     ,hour(tpep_pickup_datetime)
+     ,strftime(tpep_pickup_datetime, '%Y-%m-%d')
+     ,strftime(tpep_pickup_datetime, '%Y-%m-%d-%H')
+     ,strftime(tpep_pickup_datetime, '%Y-%m')
+FROM read_parquet('{{file_name}}.parquet') as trips
+LEFT JOIN read_csv('data/lookup/taxi_zone_lookup.csv', header=true) pu_lookup
+ON trips.pulocationid = pu_lookup.LocationID
+
+LEFT JOIN read_csv('data/lookup/taxi_zone_lookup.csv', header=true) do_lookup
+ON trips.dolocationid = do_lookup.LocationID
+
+WHERE strftime(tpep_pickup_datetime, '{{date_format}}') = '{{partition_key}}' ;
+
+
+DELETE FROM nyc.trips_error
+WHERE source_file = '{{file_name}}.parquet';
+
+
+INSERT INTO nyc.trips_error
+SELECT
+      vendorId
+     ,tpep_pickup_datetime
+     ,tpep_dropoff_datetime
+     ,passenger_count
+     ,trip_distance
+     ,rateCodeID as rate_code_id
+     ,pu_lookup.zone
+     ,do_lookup.zone
+     ,store_and_fwd_flag
+     ,payment_type
+     ,fare_amount
+     ,extra
+     ,mta_tax
+     ,tip_amount
+     ,tolls_amount
+     ,improvement_surcharge
+     ,total_amount
+     ,congestion_surcharge
+     ,airport_fee
+     ,date_diff('minute', tpep_pickup_datetime, tpep_dropoff_datetime)
+     ,hour(tpep_pickup_datetime)
+     ,strftime(tpep_pickup_datetime, '%Y-%m-%d')
+     ,strftime(tpep_pickup_datetime, '%Y-%m-%d-%H')
+     ,strftime(tpep_pickup_datetime, '%Y-%m')
+     ,'{{file_name}}.parquet' as source_file
+FROM read_parquet('{{file_name}}.parquet') as trips
+LEFT JOIN read_csv('data/lookup/taxi_zone_lookup.csv', ignore_errors=1, header=true) pu_lookup
+ON trips.pulocationid = pu_lookup.LocationID
+
+LEFT JOIN read_csv('data/lookup/taxi_zone_lookup.csv', ignore_errors=1, header=true) do_lookup
+ON trips.dolocationid = do_lookup.LocationID
+
+WHERE strftime(tpep_pickup_datetime, '{{date_format}}') != '{{partition_key}}' ;
