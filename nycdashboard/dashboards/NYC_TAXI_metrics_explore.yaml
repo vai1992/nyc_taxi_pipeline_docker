@@ -1,0 +1,10 @@
+# Explore YAML
+# Reference documentation: https://docs.rilldata.com/reference/project-files/explore-dashboards
+
+type: explore
+
+display_name: "NYC Taxi dashboard"
+metrics_view: NYC_TAXI_metrics
+
+dimensions: '*'
+measures: '*'

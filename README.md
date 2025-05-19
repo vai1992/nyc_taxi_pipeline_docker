@@ -27,14 +27,30 @@ A simple Docker Python package to build and run an Airflow-based data pipeline u
 
 ```bash
 # Clone the repo
-git clone https://github.com/vai1992/rill_coding_challenge.git
-cd rill-coding-challenge
+git clone https://github.com/vai1992/nyc_taxi_pipeline_docker.git
+cd nyc_taxi_pipeline_docker
 
 # Start Docker Container
 docker-compose up --build
 
-In another terminal
-curl 
-then rill start
+Visit : http://localhost:8080/login/
+UserName : admin
+Password : admin
 
-start 
+# Start Airflow
+Unpause the DAG nyc_taxi_pipeline in the Airflow UI
+Trigger the DAG manually to run the pipeline.
+
+In another terminal
+cd nyc_taxi_pipeline_docker
+rill start nycdashboard
+
+# Visit the Rill Dashboard
+Visit this for Dashboard http://localhost:9009/files/dashboards/NYC_TAXI_metrics_explore.yaml
+Visit this for Canvas http://localhost:9009/files/dashboards/Comparison_Canvas.yaml
+```
+
+## Tables Created 
+
+- `nyc.trips`: Contains the yellow taxi trip data.
+- `gnyc.trips_error`: Contains the yellow taxi trip data which contains data of some other month which is not of same as import file.

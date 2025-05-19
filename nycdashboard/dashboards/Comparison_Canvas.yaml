@@ -1,0 +1,51 @@
+# Explore YAML
+# Reference documentation: https://docs.rilldata.com/reference/project-files/canvas-dashboards
+
+type: canvas
+display_name: "Canvas Dashboard"
+defaults:
+  time_range: PT24H
+  comparison_mode: time
+rows:
+  - items:
+      - kpi_grid:
+          comparison:
+            - delta
+            - percent_change
+          measures:
+            - total_trips_measure
+            - average_passenger_count_measure
+            - total_trip_distance_measure
+            - average_trip_distance_measure
+          metrics_view: NYC_TAXI_metrics
+          title: Comparison with Previous 2 Weeks
+        width: 12
+    height: 40px
+  - items:
+      - heatmap:
+          color:
+            field: total_trips_measure
+            type: quantitative
+          metrics_view: NYC_TAXI_metrics
+          x:
+            field: hour_of_day
+            limit: 20
+            sort: -y
+            type: nominal
+          y:
+            field: date
+            limit: 20
+            type: nominal
+        width: 12
+  - items:
+      - pivot:
+          measures:
+            - average_passenger_count_measure
+            - average_trip_distance_measure
+            - average_fare_amount_measure
+          metrics_view: NYC_TAXI_metrics
+          row_dimensions:
+            - hour_of_day
+          title: Hour of the Day Analysis & Comparison with Pre
+        width: 12
+    height: 40px

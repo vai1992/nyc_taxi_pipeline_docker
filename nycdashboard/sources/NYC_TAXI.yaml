@@ -5,4 +5,4 @@ type: source
 
 connector: "duckdb"
 db: "warehouse/nyc_taxi.duckdb"
-sql: "SELECT count(*) FROM nyc.trips"
+sql: "SELECT * FROM nyc.trips"
